@@ -3,12 +3,13 @@ import sqlite3
 import requests
 import os
 from bs4 import BeautifulSoup
-from flask import Flask, jsonify, request, send_from_directory, g
+from flask import Flask, jsonify, request, send_from_directory, g, session, redirect, url_for, render_template_string
 from urllib.parse import urlparse
 from pathlib import Path
 from datetime import date
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 DB_FILE = Path("/data/wishlist.db") if Path("/data").exists() else Path("wishlist.db")
 WISHLIST_JSON = Path("wishlist.json")
 ARCHIVE_JSON = Path("archive.json")
@@ -181,6 +182,64 @@ def index():
     # Default to chris for legacy support, or redirect?
     # Let's serve chris by default for root
     return user_wishlist('chris')
+
+@app.route("/admin", methods=["GET", "POST"])
+def admin_page():
+    if request.method == "POST":
+        password = request.form.get("password")
+        admin_pass = os.environ.get("ADMIN_PASSWORD")
+        
+        if admin_pass and password == admin_pass:
+            session['admin_logged_in'] = True
+            return redirect(url_for('admin_page'))
+        else:
+            return render_template_string(open("admin.html").read(), error="Invalid Password")
+
+    if not session.get('admin_logged_in'):
+        return render_template_string(open("admin.html").read())
+
+    # Logged In: Show Dashboard
+    db = get_db()
+    users = db.execute('''
+        SELECT u.username, COUNT(i.id) as item_count 
+        FROM users u 
+        LEFT JOIN items i ON u.id = i.user_id 
+        GROUP BY u.id
+    ''').fetchall()
+    
+    users_list = [dict(row) for row in users]
+    return render_template_string(open("admin.html").read(), users=users_list, logged_in=True)
+
+@app.route("/api/admin/delete_user", methods=["POST"])
+def admin_delete_user():
+    if not session.get('admin_logged_in'):
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+    data = request.get_json()
+    username = data.get("username")
+    
+    db = get_db()
+    
+    # Get ID
+    cur = db.execute("SELECT id FROM users WHERE username = ?", (username,))
+    row = cur.fetchone()
+    if not row:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+        
+    user_id = row['id']
+    
+    # Cascade delete
+    db.execute("DELETE FROM items WHERE user_id = ?", (user_id,))
+    db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    db.commit()
+    
+    return jsonify({"status": "deleted"})
+
+@app.route("/api/admin/logout", methods=["POST"])
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    return jsonify({"status": "logged_out"})
+
 
 @app.route("/<username>")
 def user_wishlist(username):

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #111827;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            background-color: #2563eb;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            background: #fee2e2;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .delete-btn {
+            background-color: #ef4444;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+            width: auto;
+        }
+
+        .delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .logout-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .logout-link:hover {
+            color: #111827;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        {% if not logged_in %}
+        <h1>🔒 Admin Login</h1>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Enter Admin Password" required autofocus>
+            </div>
+            <button type="submit">Unlock Dashboard</button>
+        </form>
+        {% else %}
+        <header>
+            <div style="font-weight: 600; font-size: 1.25rem;">Admin Dashboard</div>
+            <a onclick="logout()" class="logout-link">Logout</a>
+        </header>
+
+        <table id="user-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Items</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr id="row-{{ user.username }}">
+                    <td>
+                        <a href="/{{ user.username }}" target="_blank"
+                            style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            {{ user.username }}
+                        </a>
+                    </td>
+                    <td>{{ user.item_count }}</td>
+                    <td style="text-align: right;">
+                        {% if user.username != 'chris' %}
+                        <button class="delete-btn" onclick="deleteUser('{{ user.username }}')">Delete</button>
+                        {% else %}
+                        <span style="color: #9ca3af; font-size: 0.8rem;">Protected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if users|length == 0 %}
+        <div style="text-align: center; color: #6b7280; padding: 2rem;">No users found.</div>
+        {% endif %}
+
+        <script>
+            async function deleteUser(username) {
+                if (!confirm(`Are you sure you want to delete ${username} and ALL their items? This cannot be undone.`)) return;
+
+                try {
+                    const res = await fetch('/api/admin/delete_user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+
+                    if (res.ok) {
+                        document.getElementById('row-' + username).remove();
+                    } else {
+                        alert('Failed to delete user.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error connecting to server.');
+                }
+            }
+
+            async function logout() {
+                await fetch('/api/admin/logout', { method: 'POST' });
+                window.location.reload();
+            }
+        </script>
+        {% endif %}
+    </div>
+
+</body>
+
+</html>
