@@ -143,6 +143,16 @@
             <a onclick="logout()" class="logout-link">Logout</a>
         </header>
 
+        <div
+            style="margin-bottom: 2rem; background: #eff6ff; padding: 1rem; border-radius: 6px; border: 1px solid #bfdbfe;">
+            <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1rem; color: #1e40af;">Add New User</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="new-username" placeholder="Username (no spaces)"
+                    style="flex-grow: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; margin-top: 0;">
+                <button onclick="addUser()" style="width: auto; padding: 0.5rem 1rem;">Create</button>
+            </div>
+        </div>
+
         <table id="user-table">
             <thead>
                 <tr>
@@ -178,6 +188,33 @@
         {% endif %}
 
         <script>
+            async function addUser() {
+                const input = document.getElementById('new-username');
+                const username = input.value.trim();
+
+                if (!username) return alert("Please enter a username");
+                if (username.includes(" ")) return alert("Username cannot contain spaces");
+
+                try {
+                    const res = await fetch('/api/admin/add_user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to create user');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error connecting to server.');
+                }
+            }
+
             async function deleteUser(username) {
                 if (!confirm(`Are you sure you want to delete ${username} and ALL their items? This cannot be undone.`)) return;
 

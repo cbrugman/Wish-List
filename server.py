@@ -246,23 +246,45 @@ def user_wishlist(username):
     if username == "favicon.ico":
         return "", 404
         
-    # Ensure user exists or create them
-    get_user_id(username) 
+    # Check if user exists (do NOT create automatically)
+    user_id = get_user_id(username, create=False)
+    if not user_id:
+        return "User not found. Please ask the administrator to create your profile.", 404
+
     base_dir = Path(__file__).parent.resolve()
     return send_from_directory(base_dir, "index.html")
 
-# Helper to get user_id (create if not exists)
-def get_user_id(username):
+# Helper to get user_id (create if not exists by default)
+def get_user_id(username, create=True):
     db = get_db()
     cur = db.execute("SELECT id FROM users WHERE username = ?", (username,))
     row = cur.fetchone()
     if row:
         return row['id']
     
+    if not create:
+        return None
+
     # Create user
     cur = db.execute("INSERT INTO users (username) VALUES (?)", (username,))
     db.commit()
     return cur.lastrowid
+
+@app.route("/api/admin/add_user", methods=["POST"])
+def admin_add_user():
+    if not session.get('admin_logged_in'):
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+    data = request.get_json()
+    username = data.get("username")
+    
+    if not username:
+        return jsonify({"status": "error", "message": "Username required"}), 400
+
+    # Create user if not exists
+    get_user_id(username, create=True)
+    
+    return jsonify({"status": "added", "username": username})
 
 @app.route("/api/<username>/wishlist")
 def get_wishlist(username):
@@ -302,10 +324,22 @@ def add_item(username):
     user_id = get_user_id(username)
     db = get_db()
     
-    # Check duplicate
-    cur = db.execute("SELECT id FROM items WHERE user_id = ? AND url = ?", (user_id, url))
-    if cur.fetchone():
-        return jsonify({"status": "exists"}), 200
+    # Check duplicate or archived
+    cur = db.execute("SELECT id, archived FROM items WHERE user_id = ? AND url = ?", (user_id, url))
+    row = cur.fetchone()
+    
+    if row:
+        if row['archived']:
+            # Restore it
+            db.execute("UPDATE items SET archived = 0, purchased = 0, added_date = ? WHERE id = ?", (date.today().isoformat(), row['id']))
+            db.commit()
+            # Fetch metadata again? No, assume it's fine. Or maybe update it? Let's just restore.
+            # Actually, return title so frontend can say "Restored X"
+            cur = db.execute("SELECT title FROM items WHERE id = ?", (row['id'],))
+            title = cur.fetchone()['title']
+            return jsonify({"status": "restored", "title": title})
+        else:
+            return jsonify({"status": "exists"}), 200
 
     title, description, image, price = fetch_metadata(url)
     

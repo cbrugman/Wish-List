@@ -395,10 +395,10 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 allItems = await response.json();
 
-                if (allItems.length === 0) {
-                    grid.innerHTML = '<div class="empty-state">This wishlist is empty. Please add some items.</div>';
-                    return;
-                }
+                // if (allItems.length === 0) {
+                //     grid.innerHTML = '<div class="empty-state">This wishlist is empty. Please add some items.</div>';
+                //     return;
+                // }
 
                 renderItems();
 
@@ -579,9 +579,16 @@
             btn.disabled = true;
 
             try {
-                await sendPost(`/api/${USERNAME}/add`, { url });
+                const result = await sendPost(`/api/${USERNAME}/add`, { url });
+
+                if (result && result.status === 'restored') {
+                    alert(`Item restored from archive: ${result.title}`);
+                } else if (result && result.status === 'exists') {
+                    alert('This item is already in your wishlist!');
+                }
+
                 input.value = ''; // Clear input
-                loadWishlist(); // Reload list
+                // loadWishlist(); // sendPost already calls this
             } catch (error) {
                 alert("Failed to add item.");
             } finally {
@@ -609,7 +616,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (response.ok) loadWishlist();
+                if (response.ok) {
+                    loadWishlist();
+                    try { return await response.json(); } catch (e) { return {}; }
+                }
             } catch (err) { console.error(err); }
         }
 
