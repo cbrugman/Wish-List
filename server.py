@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import date
 
 app = Flask(__name__)
-DB_FILE = Path("wishlist.db")
+DB_FILE = Path("/data/wishlist.db") if Path("/data").exists() else Path("wishlist.db")
 WISHLIST_JSON = Path("wishlist.json")
 ARCHIVE_JSON = Path("archive.json")
 
@@ -28,6 +28,10 @@ def close_connection(exception):
 
 def init_db():
     with app.app_context():
+        # Ensure the directory exists if using the absolute path
+        if DB_FILE.is_absolute():
+            DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+            
         db = get_db()
         cursor = db.cursor()
         
@@ -183,7 +187,7 @@ def user_wishlist(username):
     # Ensure user exists or create them
     get_user_id(username) 
     base_dir = Path(__file__).parent.resolve()
-    return send_from_directory(base_dir, "wishlist.html")
+    return send_from_directory(base_dir, "index.html")
 
 # Helper to get user_id (create if not exists)
 def get_user_id(username):
