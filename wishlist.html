@@ -195,6 +195,7 @@
             line-height: 1.3;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -205,6 +206,7 @@
             margin-bottom: 1.5rem;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             flex-grow: 1;
@@ -295,7 +297,7 @@
             </button>
         </div>
 
-        <div class="add-form" style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+        <div class="add-form" style="margin-top: 1rem; display: none; justify-content: center; gap: 0.5rem;">
             <input type="url" id="new-item-url" placeholder="Paste product link here..."
                 style="padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--card-bg); color: var(--text-primary); font-family: inherit; width: 100%; max-width: 400px;">
             <button onclick="addItem()"
@@ -345,10 +347,31 @@
         const pathUser = window.location.pathname.substring(1); // remove leading slash
         const USERNAME = pathUser || 'chris'; // Default to chris if root
 
-        // Update Title
+        // Determine Mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const isOwner = urlParams.get('mode') === 'owner';
+
+        // Update UI based on User & Mode
         const titleName = USERNAME.charAt(0).toUpperCase() + USERNAME.slice(1);
-        document.getElementById('page-title').innerText = `${titleName}'s Wish List`;
-        document.getElementById('page-subtitle').innerText = `Gifts for ${titleName}`;
+
+        if (isOwner) {
+            // Personal / Owner View
+            document.getElementById('page-title').innerText = `${titleName}'s Personal Wish List`;
+            document.getElementById('page-subtitle').innerText = "Manage your items";
+
+            // Special Background for Owner (Deep Indigo)
+            document.body.style.backgroundColor = "#1e1b4b";
+
+            // Show Add Form
+            document.querySelector('.add-form').style.display = 'flex';
+        } else {
+            // Public / Guest View
+            document.getElementById('page-title').innerText = `${titleName}'s Public Wish List`;
+            document.getElementById('page-subtitle').innerText = `Gifts for ${titleName}`;
+
+            // Default Background (Slate)
+            // document.body.style.backgroundColor = "#0f172a"; // Already default in CSS
+        }
 
         async function loadWishlist() {
             const grid = document.getElementById('wishlist-grid');
@@ -372,7 +395,7 @@
                 allItems = await response.json();
 
                 if (allItems.length === 0) {
-                    grid.innerHTML = '<div class="empty-state">This wishlist is empty. Add items above!</div>';
+                    grid.innerHTML = '<div class="empty-state">This wishlist is empty. Please add some items.</div>';
                     return;
                 }
 
@@ -450,7 +473,7 @@
             grid.innerHTML = filtered.map(item => {
                 // Logic for display based on Mode
                 const showDelete = isOwner;
-                const isPurchased = item.purchased === true;
+                const isPurchased = Boolean(item.purchased);
                 const showPurchasedBadge = !isOwner && isPurchased;
                 const showMarkButton = !isOwner && !isPurchased;
                 const showUnmarkButton = !isOwner && isPurchased;
@@ -516,7 +539,7 @@
 
         async function loadArchive() {
             try {
-                const response = await fetch('/archive');
+                const response = await fetch(`/api/${USERNAME}/archive`);
                 if (!response.ok) return;
                 const items = await response.json();
 
@@ -555,7 +578,7 @@
             btn.disabled = true;
 
             try {
-                await sendPost('/add', { url });
+                await sendPost(`/api/${USERNAME}/add`, { url });
                 input.value = ''; // Clear input
                 loadWishlist(); // Reload list
             } catch (error) {
