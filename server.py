@@ -243,6 +243,9 @@ def admin_logout():
 
 @app.route("/<username>")
 def user_wishlist(username):
+    if username == "favicon.ico":
+        return "", 404
+        
     # Ensure user exists or create them
     get_user_id(username) 
     base_dir = Path(__file__).parent.resolve()
