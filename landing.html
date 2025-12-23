@@ -102,11 +102,18 @@
 <body>
     <div class="container">
         <h1>Wish Lists</h1>
-        <div class="subtitle">Select a person to view their wishlist</div>
+        <div class="subtitle" style="margin-bottom: 2rem;">Select a person to view their wishlist</div>
 
-        <div class="list-grid">
+        <div style="text-align: right; margin-bottom: 1rem;">
+            <button onclick="toggleSort()" id="sort-btn"
+                style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-secondary); padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.2s;">
+                Sort: A-Z ↓
+            </button>
+        </div>
+
+        <div class="list-grid" id="user-list">
             {% for user in users %}
-            <a href="/{{ user.username }}" class="user-card">
+            <a href="/{{ user.username }}" class="user-card" data-name="{{ user.username }}">
                 <span class="user-name">{{ user.username }}</span>
                 <span class="arrow">→</span>
             </a>
@@ -132,6 +139,30 @@
             </a>
         </div>
     </div>
+
+    <script>
+        let isAscending = true;
+
+        function toggleSort() {
+            const list = document.getElementById('user-list');
+            const items = Array.from(list.getElementsByClassName('user-card'));
+            const btn = document.getElementById('sort-btn');
+
+            isAscending = !isAscending;
+
+            items.sort((a, b) => {
+                const nameA = a.getAttribute('data-name').toLowerCase();
+                const nameB = b.getAttribute('data-name').toLowerCase();
+
+                return isAscending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            });
+
+            // Re-append in new order
+            items.forEach(item => list.appendChild(item));
+
+            btn.textContent = isAscending ? "Sort: A-Z ↓" : "Sort: Z-A ↑";
+        }
+    </script>
 </body>
 
 </html>
