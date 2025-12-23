@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --danger: #ef4444;
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        header {
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .image-container {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .item-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .item-card-wrapper:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .item-card:hover .item-image {
+            transform: scale(1.05);
+        }
+
+        /* Purchased State */
+        .item-card.purchased {
+            opacity: 0.7;
+            filter: grayscale(100%);
+        }
+
+        .purchased-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .action-btn {
+            margin-top: 0.5rem;
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn.buy-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .source-tag {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .item-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .price {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .date-added {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            background: #334155;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .item-card {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1 id="page-title">Wish List</h1>
+        <div class="subtitle" id="page-subtitle">Things I want to buy</div>
+
+        <div class="controls"
+            style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <select id="sort-select"
+                style="padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--card-bg); color: var(--text-primary); font-family: inherit;">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+            </select>
+            <input type="number" id="price-filter" placeholder="Max Price ($)"
+                style="padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--card-bg); color: var(--text-primary); font-family: inherit; width: 150px;">
+
+            <button id="archive-btn" onclick="archivePurchased()"
+                style="display: none; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.1); color: var(--accent); font-family: inherit; cursor: pointer; transition: all 0.2s;">
+                Archive Purchased
+            </button>
+        </div>
+
+        <div class="add-form" style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+            <input type="url" id="new-item-url" placeholder="Paste product link here..."
+                style="padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--card-bg); color: var(--text-primary); font-family: inherit; width: 100%; max-width: 400px;">
+            <button onclick="addItem()"
+                style="padding: 0.8rem 1.5rem; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                Add
+            </button>
+        </div>
+    </header>
+
+    <main id="wishlist-grid">
+        <!-- JS will populate this -->
+        <div class="empty-state">Loading your wishlist...</div>
+    </main>
+
+    <div id="archive-section" style="max-width: 1200px; margin: 4rem auto; display: none;">
+        <h2
+            style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+            Archived Items</h2>
+        <div id="archive-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- Archive items go here -->
+        </div>
+    </div>
+
+    <script>
+        async function deleteItem(url) {
+            try {
+                const response = await fetch(`/api/${USERNAME}/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (response.ok) {
+                    loadWishlist(); // Reload to update UI
+                } else {
+                    alert('Failed to delete item.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error deleting item.');
+            }
+        }
+
+        let allItems = [];
+
+        // Determine user from URL (path: /<username>)
+        const pathUser = window.location.pathname.substring(1); // remove leading slash
+        const USERNAME = pathUser || 'chris'; // Default to chris if root
+
+        // Update Title
+        const titleName = USERNAME.charAt(0).toUpperCase() + USERNAME.slice(1);
+        document.getElementById('page-title').innerText = `${titleName}'s Wish List`;
+        document.getElementById('page-subtitle').innerText = `Gifts for ${titleName}`;
+
+        async function loadWishlist() {
+            const grid = document.getElementById('wishlist-grid');
+
+            // check if running locally via file://
+            if (window.location.protocol === 'file:') {
+                grid.innerHTML = `
+                    <div class="empty-state" style="border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.1);">
+                        <h3>⚠️ Incorrect Access Method</h3>
+                        <p style="margin-top: 1rem;">You are opening this file directly. Browsers block data loading this way for security.</p>
+                        <p style="margin-top: 0.5rem; font-weight: 600;">Please open <a href="http://localhost:5000" style="color: var(--accent);">http://localhost:5000</a> instead.</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.9em;">(Make sure the server is running)</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/${USERNAME}/wishlist`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                allItems = await response.json();
+
+                if (allItems.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">This wishlist is empty. Add items above!</div>';
+                    return;
+                }
+
+                renderItems();
+
+            } catch (error) {
+                console.error('Error loading wishlist:', error);
+                grid.innerHTML = '<div class="empty-state">Failed to load wishlist. Make sure the server is running.</div>';
+            }
+        }
+
+        function parsePrice(priceStr) {
+            if (!priceStr) return null;
+            const num = parseFloat(priceStr.toString().replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? null : num;
+        }
+
+        function renderItems() {
+            const grid = document.getElementById('wishlist-grid');
+            const sortValue = document.getElementById('sort-select').value;
+            const maxPriceInput = document.getElementById('price-filter').value;
+            const maxPrice = maxPriceInput ? parseFloat(maxPriceInput) : null;
+
+            // Mode Check
+            const urlParams = new URLSearchParams(window.location.search);
+            const isOwner = urlParams.get('mode') === 'owner';
+
+            // Show Archive Button if Owner
+            const archiveBtn = document.getElementById('archive-btn');
+            const archiveSection = document.getElementById('archive-section');
+            if (archiveBtn) {
+                archiveBtn.style.display = isOwner ? 'block' : 'none';
+            }
+            if (isOwner) {
+                loadArchive();
+                if (archiveSection) archiveSection.style.display = 'block';
+            }
+
+            let filtered = [...allItems];
+
+            // Filter
+            if (maxPrice !== null && !isNaN(maxPrice)) {
+                filtered = filtered.filter(item => {
+                    const p = parsePrice(item.price);
+                    return p !== null && p <= maxPrice;
+                });
+            }
+
+            // Sort
+            filtered.sort((a, b) => {
+                if (sortValue === 'date-desc') return new Date(b.added) - new Date(a.added);
+                if (sortValue === 'date-asc') return new Date(a.added) - new Date(b.added);
+
+                const pA = parsePrice(a.price);
+                const pB = parsePrice(b.price);
+
+                if (sortValue === 'price-asc') {
+                    const valA = pA !== null ? pA : Infinity;
+                    const valB = pB !== null ? pB : Infinity;
+                    return valA - valB;
+                }
+
+                if (sortValue === 'price-desc') {
+                    const valA = pA !== null ? pA : -Infinity;
+                    const valB = pB !== null ? pB : -Infinity;
+                    return valB - valA;
+                }
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No items match your filter.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                // Logic for display based on Mode
+                const showDelete = isOwner;
+                const isPurchased = item.purchased === true;
+                const showPurchasedBadge = !isOwner && isPurchased;
+                const showMarkButton = !isOwner && !isPurchased;
+                const showUnmarkButton = !isOwner && isPurchased;
+
+                // If owner, we show plain card (no opacity change)
+                // If guest, we show opacity change if purchased
+                const cardClass = (!isOwner && isPurchased) ? 'item-card purchased' : 'item-card';
+
+                return `
+                    <div class="item-card-wrapper" style="position: relative;">
+                        ${showDelete ? `
+                        <button class="delete-btn" onclick="deleteItem('${escapeHtml(item.url)}')" title="Delete Item">
+                            ×
+                        </button>` : ''}
+                        
+                        ${showPurchasedBadge ? `<div class="purchased-badge">Purchased</div>` : ''}
+
+                        <a href="${item.url}" target="_blank" class="${cardClass}">
+                        <div class="image-container">
+                            <img src="${item.image || 'https://placehold.co/600x400/1e293b/94a3b8?text=No+Image'}" 
+                                 alt="${escapeHtml(item.title)}" 
+                                 class="item-image"
+                                 onerror="this.src='https://placehold.co/600x400/1e293b/94a3b8?text=Image+Error'">
+                        </div>
+                        <div class="content">
+                            <div class="source-tag">${escapeHtml(item.source)}</div>
+                            <h2 class="item-title">${escapeHtml(item.title)}</h2>
+                            <p class="item-desc">${escapeHtml(item.description || '')}</p>
+                            <div class="footer">
+                                <span class="price">${item.price ? '$' + item.price : ''}</span>
+                                <span class="date-added">Added ${new Date(item.added).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        </a>
+                        
+                        ${showMarkButton ? `
+                        <button class="action-btn buy-btn" onclick="markPurchased('${escapeHtml(item.url)}')" style="margin-top: 5px;">
+                            Mark as Purchased
+                        </button>` : ''}
+                        
+                        ${showUnmarkButton ? `
+                        <button class="action-btn" onclick="unmarkPurchased('${escapeHtml(item.url)}')" style="margin-top: 5px; opacity: 0.5;">
+                            Undo Purchase
+                        </button>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function markPurchased(url) {
+            await sendPost(`/api/${USERNAME}/mark_purchased`, { url });
+        }
+
+        async function unmarkPurchased(url) {
+            await sendPost(`/api/${USERNAME}/unmark_purchased`, { url });
+        }
+
+        async function archivePurchased() {
+            if (!confirm("This will move all Purchased items to the archive and remove them from this list. Continue?")) return;
+            await sendPost(`/api/${USERNAME}/archive_purchased`, {});
+            loadArchive();
+        }
+
+        async function loadArchive() {
+            try {
+                const response = await fetch('/archive');
+                if (!response.ok) return;
+                const items = await response.json();
+
+                const list = document.getElementById('archive-list');
+                if (items.length === 0) {
+                    list.innerHTML = '<div style="color: var(--text-secondary); font-style: italic;">No archived items.</div>';
+                    return;
+                }
+
+                list.innerHTML = items.map(item => `
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <img src="${item.image || 'https://placehold.co/100?text=No'}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; opacity: 0.6;">
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-secondary);">${escapeHtml(item.title)}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Purchased from ${escapeHtml(item.source)}</div>
+                            </div>
+                        </div>
+                        <button onclick="restoreItem('${escapeHtml(item.url)}')" title="Restore to Wishlist" style="background: none; border: 1px solid rgba(255,255,255,0.1); color: var(--accent); padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                            ↺ Restore
+                        </button>
+                    </div>
+                `).join('');
+            } catch (err) { console.error('Error loading archive:', err); }
+        }
+
+        async function addItem() {
+            const input = document.getElementById('new-item-url');
+            const url = input.value.trim();
+            if (!url) return;
+
+            // Visual feedback
+            const btn = input.nextElementSibling;
+            const originalText = btn.innerText;
+            btn.innerText = 'Adding...';
+            btn.disabled = true;
+
+            try {
+                await sendPost('/add', { url });
+                input.value = ''; // Clear input
+                loadWishlist(); // Reload list
+            } catch (error) {
+                alert("Failed to add item.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function restoreItem(url) {
+            try {
+                await fetch(`/api/${USERNAME}/restore`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                loadWishlist();
+                loadArchive();
+            } catch (err) { console.error(err); }
+        }
+
+        async function sendPost(endpoint, data) {
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) loadWishlist();
+            } catch (err) { console.error(err); }
+        }
+
+        // Event Listeners
+        document.getElementById('sort-select').addEventListener('change', renderItems);
+        document.getElementById('price-filter').addEventListener('input', renderItems);
+
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Load on start
+        loadWishlist();
+    </script>
+</body>
+
+</html>
