@@ -180,7 +180,7 @@ init_db()
 @app.route("/")
 def index():
     db = get_db()
-    users = db.execute("SELECT username FROM users ORDER BY username ASC").fetchall()
+    users = db.execute("SELECT username FROM users ORDER BY username COLLATE NOCASE ASC").fetchall()
     users_list = [dict(row) for row in users]
     return render_template_string(open("landing.html").read(), users=users_list)
 
@@ -206,6 +206,7 @@ def admin_page():
         FROM users u 
         LEFT JOIN items i ON u.id = i.user_id 
         GROUP BY u.id
+        ORDER BY u.username COLLATE NOCASE ASC
     ''').fetchall()
     
     users_list = [dict(row) for row in users]
