@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wish Lists</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .list-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .user-card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            background-color: rgba(30, 41, 59, 0.8);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .arrow {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Wish Lists</h1>
+        <div class="subtitle">Select a person to view their wishlist</div>
+
+        <div class="list-grid">
+            {% for user in users %}
+            <a href="/{{ user.username }}" class="user-card">
+                <span class="user-name">{{ user.username }}</span>
+                <span class="arrow">→</span>
+            </a>
+            {% endfor %}
+
+            {% if users|length == 0 %}
+            <div style="color: var(--text-secondary);">No wishlists found.</div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 3rem;">
+            <a href="/admin"
+                style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; opacity: 0.5; transition: opacity 0.2s;">
+                Admin Login
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

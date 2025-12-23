@@ -64,8 +64,8 @@ def init_db():
         db.commit()
         
         # Migration: Check if we have legacy JSON data to import
-        # We will import it under a default user "chris"
-        cursor.execute("SELECT count(*) FROM users WHERE username = 'chris'")
+        # We will import it under a default user "chris" ONLY if DB is empty
+        cursor.execute("SELECT count(*) FROM users")
         if cursor.fetchone()[0] == 0:
             print("Migrating legacy data to SQLite...")
             cursor.execute("INSERT INTO users (username) VALUES ('chris')")
@@ -179,9 +179,10 @@ init_db()
 
 @app.route("/")
 def index():
-    # Default to chris for legacy support, or redirect?
-    # Let's serve chris by default for root
-    return user_wishlist('chris')
+    db = get_db()
+    users = db.execute("SELECT username FROM users ORDER BY username ASC").fetchall()
+    users_list = [dict(row) for row in users]
+    return render_template_string(open("landing.html").read(), users=users_list)
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin_page():

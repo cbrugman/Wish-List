@@ -172,11 +172,7 @@
                     </td>
                     <td>{{ user.item_count }}</td>
                     <td style="text-align: right;">
-                        {% if user.username != 'chris' %}
                         <button class="delete-btn" onclick="deleteUser('{{ user.username }}')">Delete</button>
-                        {% else %}
-                        <span style="color: #9ca3af; font-size: 0.8rem;">Protected</span>
-                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
