@@ -61,8 +61,14 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
-        db.commit()
-        
+        # Migration for 'external_link' column
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN external_link TEXT")
+            db.commit()
+            print("Added external_link column to users.")
+        except sqlite3.OperationalError:
+            pass # Column likely exists
+
         # Migration: Check if we have legacy JSON data to import
         # We will import it under a default user "chris" ONLY if DB is empty
         cursor.execute("SELECT count(*) FROM users")
@@ -417,21 +423,32 @@ def restore_item(username):
     # Check if active list already has this URL (deduplication)
     cur = db.execute("SELECT id FROM items WHERE user_id = ? AND url = ? AND archived = 0", (user_id, url))
     if cur.fetchone():
-        # Already active? Just ensure it's unpurchased? Or maybe delete the archived one?
-        # Logic in previous version was: if duplicate, don't restore.
-        # But here we are just toggling the flag. 
-        # Actually in SQL, if I restore, I'm just flipping 'archived' to 0. 
-        # But if a duplicate exists, I might violate a constraint if I enforced unique(user, url).
-        # I didn't enforce valid constraint above.
-        
-        # Let's simple check: if exists active, delete this archived row (merge)? 
-        # Or just Error?
-        # Let's assume we just won't restore if active exists.
         return jsonify({"status": "exists_active"}), 400
 
     db.execute("UPDATE items SET archived = 0, purchased = 0 WHERE user_id = ? AND url = ?", (user_id, url))
     db.commit()
     return jsonify({"status": "restored"})
+
+@app.route("/api/<username>/info")
+def get_user_info(username):
+    user_id = get_user_id(username, create=False)
+    if not user_id:
+        return jsonify({}), 404
+    
+    db = get_db()
+    row = db.execute("SELECT external_link FROM users WHERE id = ?", (user_id,)).fetchone()
+    return jsonify({"external_link": row['external_link']})
+
+@app.route("/api/<username>/set_link", methods=["POST"])
+def set_external_link(username):
+    data = request.get_json()
+    link = data.get("link")
+    user_id = get_user_id(username)
+    
+    db = get_db()
+    db.execute("UPDATE users SET external_link = ? WHERE id = ?", (link, user_id))
+    db.commit()
+    return jsonify({"status": "updated", "link": link})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
