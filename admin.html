@@ -146,11 +146,11 @@
         <div
             style="margin-bottom: 2rem; background: #eff6ff; padding: 1rem; border-radius: 6px; border: 1px solid #bfdbfe;">
             <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1rem; color: #1e40af;">Add New User</h3>
-            <div style="display: flex; gap: 0.5rem;">
-                <input type="text" id="new-username" placeholder="Username (no spaces)"
+            <form onsubmit="event.preventDefault(); addUser()" style="display: flex; gap: 0.5rem;">
+                <input type="text" id="new-username" placeholder="Username"
                     style="flex-grow: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; margin-top: 0;">
-                <button onclick="addUser()" style="width: auto; padding: 0.5rem 1rem;">Create</button>
-            </div>
+                <button type="submit" style="width: auto; padding: 0.5rem 1rem;">Create</button>
+            </form>
         </div>
 
         <table id="user-table">
@@ -193,7 +193,7 @@
                 const username = input.value.trim();
 
                 if (!username) return alert("Please enter a username");
-                if (username.includes(" ")) return alert("Username cannot contain spaces");
+                // if (username.includes(" ")) return alert("Username cannot contain spaces");
 
                 try {
                     const res = await fetch('/api/admin/add_user', {

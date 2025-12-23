@@ -353,7 +353,8 @@
         const isOwner = urlParams.get('mode') === 'owner';
 
         // Update UI based on User & Mode
-        const titleName = USERNAME.charAt(0).toUpperCase() + USERNAME.slice(1);
+        const displayUser = decodeURIComponent(USERNAME);
+        const titleName = displayUser.charAt(0).toUpperCase() + displayUser.slice(1);
 
         if (isOwner) {
             // Personal / Owner View
